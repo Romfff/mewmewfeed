@@ -24,6 +24,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <script src="https://5gvci.com/act/files/tag.min.js?z=11594677" data-cfasync="false" async></script>
+      </head>
       <body className="min-h-full flex flex-col">
         <AppProvider>
           {children}
