@@ -24,7 +24,6 @@ export default function Home() {
   const [foods, setFoods] = useState<FoodIcon[]>([])
   const [showAd, setShowAd] = useState(false)
   const [isMouthOpen, setIsMouthOpen] = useState(false)
-  const [critShake, setCritShake] = useState(false)
   
   const { t, lang, setLang, theme, setTheme } = useAppContext()
 
@@ -168,10 +167,18 @@ export default function Home() {
       }
       setFoods(prev => [...prev, newFood])
 
-      if (isCrit) {
-        setCritShake(true)
-        if ((window as any).critTimeout) clearTimeout((window as any).critTimeout)
-        ;(window as any).critTimeout = setTimeout(() => setCritShake(false), 200)
+      if (isCrit && catRef.current) {
+        // Use Web Animations API for direct, high-performance animation that restarts reliably on rapid mobile taps
+        catRef.current.animate([
+          { transform: 'translate(0, 0) scale(1.1) rotate(0deg)', filter: 'drop-shadow(0 0 20px rgba(255, 0, 0, 0.8))' },
+          { transform: 'translate(-10px, 10px) scale(1.1) rotate(-5deg)', filter: 'drop-shadow(0 0 20px rgba(255, 0, 0, 0.8))' },
+          { transform: 'translate(10px, -10px) scale(1.1) rotate(5deg)', filter: 'drop-shadow(0 0 20px rgba(255, 0, 0, 0.8))' },
+          { transform: 'translate(-10px, -10px) scale(1.1) rotate(-5deg)', filter: 'drop-shadow(0 0 20px rgba(255, 0, 0, 0.8))' },
+          { transform: 'translate(0, 0) scale(1) rotate(0deg)', filter: 'none' }
+        ], { 
+          duration: 300, 
+          easing: 'cubic-bezier(0.36, 0.07, 0.19, 0.97)' 
+        })
       }
 
       // Clean up previous timeouts for mouth animation
@@ -329,7 +336,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className={`cat-container ${critShake ? 'crit-shake' : ''}`}>
+        <div className="cat-container">
           <img 
             ref={catRef}
             src={isMouthOpen ? "/popcat_open.png" : "/popcat_closed.png"} 
