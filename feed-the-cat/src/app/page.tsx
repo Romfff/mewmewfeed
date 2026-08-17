@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { feedCat, claimReward, claimRandomDrop } from './actions'
+import { feedCat, claimReward } from './actions'
 import { useAppContext } from '@/components/AppProvider'
 
 type FoodIcon = {

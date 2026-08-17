@@ -14,7 +14,7 @@ export default function ProfileClient({ user }: { user: any }) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [toastMsg, setToastMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null)
   const [confirmDialog, setConfirmDialog] = useState<{ message: string, onConfirm: () => void } | null>(null)
-  const [lastNameChangeAt, setLastNameChangeAt] = useState<string | null>(user.lastNameChangeAt)
+  const [lastNameChangeAt, setLastNameChangeAt] = useState<Date | string | null>(user.lastNameChangeAt)
   const [cropImageSrc, setCropImageSrc] = useState<string | null>(null)
   const [cropTarget, setCropTarget] = useState<'avatar' | number | null>(null)
   const { t } = useAppContext()
