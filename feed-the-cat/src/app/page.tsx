@@ -80,11 +80,10 @@ export default function Home() {
   }, [router])
 
   const playPopSound = () => {
-    if (audioCtxRef.current && audioBufferRef.current) {
-      // Resume context if it was suspended (iOS requires this inside user interaction)
-      if (audioCtxRef.current.state === 'suspended') {
-        audioCtxRef.current.resume()
-      }
+    if (!audioCtxRef.current || !audioBufferRef.current) return
+
+    const play = () => {
+      if (!audioCtxRef.current || !audioBufferRef.current) return
       const source = audioCtxRef.current.createBufferSource()
       source.buffer = audioBufferRef.current
       
@@ -94,6 +93,20 @@ export default function Home() {
       source.connect(gainNode)
       gainNode.connect(audioCtxRef.current.destination)
       source.start(0)
+    }
+
+    // Resume context if it was suspended (iOS puts it to sleep when tab is backgrounded)
+    if (audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume().then(play).catch(console.error)
+    } else if (audioCtxRef.current.state === 'closed') {
+      // Recreate context if OS killed it
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+      if (AudioContextClass) {
+        audioCtxRef.current = new AudioContextClass()
+        audioCtxRef.current.resume().then(play).catch(console.error)
+      }
+    } else {
+      play()
     }
   }
 
