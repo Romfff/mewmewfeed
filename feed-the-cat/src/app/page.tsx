@@ -250,6 +250,17 @@ export default function Home() {
 
     // Gọi API cộng điểm
     try {
+      // 1. MUST flush pending clicks to server first! Otherwise server doesn't know we leveled up!
+      if (pendingClicksRef.current > 0) {
+        const clicksToSync = pendingClicksRef.current
+        pendingClicksRef.current = 0
+        if (syncTimeoutRef.current) {
+          clearTimeout(syncTimeoutRef.current)
+        }
+        await feedCat(user.id, clicksToSync)
+      }
+
+      // 2. Now it's safe to claim reward because server state is synced
       const res = await claimReward(user.id)
       if (res.success && res.level !== undefined && res.exp !== undefined && res.expNeeded !== undefined) {
         setLevel(res.level)
