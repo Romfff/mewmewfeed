@@ -37,6 +37,15 @@ export default function Home() {
   const getExpNeededForLevel = (lvl: number) => 100 + (lvl - 1) * 50
 
   useEffect(() => {
+    // Ping the sync route every 15 seconds to ensure Redis -> Postgres synchronization
+    // This acts as a decentralized cron job while players are active
+    const interval = setInterval(() => {
+      fetch('/api/cron/sync', { cache: 'no-store' }).catch(console.error)
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
     // Initialize Web Audio API for pristine pop sound
     if (typeof window !== 'undefined' && !audioCtxRef.current) {
       const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
