@@ -30,38 +30,40 @@ export default async function Leaderboard() {
 
       <div className="card" style={{ maxWidth: '800px', margin: '2rem auto' }}>
         <h2>Top 100 Cats</h2>
-        <table className="leaderboard-table">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Name</th>
-              <th>Level</th>
-              <th>Total EXP</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topUsers.map((user, i) => (
-              <tr key={user.username}>
-                <td>{i + 1}</td>
-                <td style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.05)', flexShrink: 0 }}>
-                    {user.avatarUrl && <img src={user.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
-                  </div>
-                  <Link href={`/user/${user.username}`} style={{ color: 'inherit', textDecoration: 'none' }}>
-                    {user.displayName || user.username}
-                  </Link>
-                </td>
-                <td>{user.level}</td>
-                <td>{user.exp}</td>
-              </tr>
-            ))}
-            {topUsers.length === 0 && (
+        <div style={{ overflowX: 'auto', width: '100%' }}>
+          <table className="leaderboard-table">
+            <thead>
               <tr>
-                <td colSpan={4} style={{ textAlign: 'center' }}>No users yet. Be the first to play!</td>
+                <th>Rank</th>
+                <th>Name</th>
+                <th>Level</th>
+                <th>Total EXP</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {topUsers.map((user, i) => (
+                <tr key={user.username}>
+                  <td>{i + 1}</td>
+                  <td style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', overflow: 'hidden', backgroundColor: 'rgba(0,0,0,0.05)', flexShrink: 0 }}>
+                      {user.avatarUrl && <img src={user.avatarUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                    </div>
+                    <Link href={`/user/${user.username}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                      {user.displayName || user.username}
+                    </Link>
+                  </td>
+                  <td>{user.level}</td>
+                  <td>{user.exp}</td>
+                </tr>
+              ))}
+              {topUsers.length === 0 && (
+                <tr>
+                  <td colSpan={4} style={{ textAlign: 'center' }}>No users yet. Be the first to play!</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   )

@@ -25,8 +25,9 @@ export default function Home() {
   
   const { t, lang, setLang, theme, setTheme } = useAppContext()
 
-  // Use refs for audio to prevent re-creating
-  const audioRefs = useRef<HTMLAudioElement[]>([])
+  // Web Audio API for zero-latency, high quality overlapping sound
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const audioBufferRef = useRef<AudioBuffer | null>(null)
   const catRef = useRef<HTMLImageElement>(null)
   
   // Batching mechanism
@@ -36,12 +37,19 @@ export default function Home() {
   const getExpNeededForLevel = (lvl: number) => 100 + (lvl - 1) * 50
 
   useEffect(() => {
-    // Pre-create some audio instances for rapid clicking (like Howler)
-    if (typeof window !== 'undefined' && audioRefs.current.length === 0) {
-      // Use a single audio instance for better mobile compatibility
-      const audio = new Audio('/pop.mp3')
-      audio.volume = 0.2
-      audioRefs.current.push(audio)
+    // Initialize Web Audio API for pristine pop sound
+    if (typeof window !== 'undefined' && !audioCtxRef.current) {
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext
+      if (AudioContextClass) {
+        audioCtxRef.current = new AudioContextClass()
+        fetch('/pop.mp3')
+          .then(res => res.arrayBuffer())
+          .then(buffer => audioCtxRef.current?.decodeAudioData(buffer))
+          .then(decodedData => {
+            if (decodedData) audioBufferRef.current = decodedData
+          })
+          .catch(err => console.error("Error decoding audio:", err))
+      }
     }
 
     fetch('/api/user/me')
@@ -61,13 +69,20 @@ export default function Home() {
   }, [router])
 
   const playPopSound = () => {
-    const audios = audioRefs.current
-    if (audios.length > 0) {
-      const audio = audios[0]
-      audio.currentTime = 0
-      // Ensure volume is always soft
-      audio.volume = 0.2
-      audio.play().catch(() => {})
+    if (audioCtxRef.current && audioBufferRef.current) {
+      // Resume context if it was suspended (iOS requires this inside user interaction)
+      if (audioCtxRef.current.state === 'suspended') {
+        audioCtxRef.current.resume()
+      }
+      const source = audioCtxRef.current.createBufferSource()
+      source.buffer = audioBufferRef.current
+      
+      const gainNode = audioCtxRef.current.createGain()
+      gainNode.gain.value = 0.2 // Soft volume
+      
+      source.connect(gainNode)
+      gainNode.connect(audioCtxRef.current.destination)
+      source.start(0)
     }
   }
 
