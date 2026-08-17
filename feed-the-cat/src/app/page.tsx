@@ -105,12 +105,28 @@ export default function Home() {
     return () => window.removeEventListener('pointerup', handlePointerUp)
   }, [handlePointerUp])
 
+  const clickTimestampsRef = useRef<number[]>([])
+
   const handleFeed = useCallback(
     async (e: React.MouseEvent | React.TouchEvent) => {
+      // 1. Anti-Cheat: Reject programmatic clicks (console scripts)
+      if (!e.isTrusted) return
+
       // Prevent double firing if children are clicked
       if (e.target instanceof HTMLElement && e.target.closest('.modal')) return
 
       if (!user) return
+
+      // 2. Anti-Cheat: Max Clicks Per Second (CPS) limit
+      const now = Date.now()
+      // Remove timestamps older than 1 second
+      clickTimestampsRef.current = clickTimestampsRef.current.filter(t => now - t < 1000)
+      
+      // Limit to 20 CPS (clicks per second). Anything faster is blocked.
+      if (clickTimestampsRef.current.length >= 20) {
+        return // Ignore this click
+      }
+      clickTimestampsRef.current.push(now)
 
       let spawnX = 0
       let spawnY = 0
