@@ -169,6 +169,9 @@ export async function feedCat(userId: string, clicks: number = 1) {
 }
 
 export async function claimReward(userId: string) {
+  // 1. Force sync from Redis to Postgres to ensure we reward the correct level
+  await syncRedisToPostgres().catch(console.error)
+
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) return { error: 'User not found' }
 
@@ -195,6 +198,16 @@ export async function claimReward(userId: string) {
       level: newLevel
     }
   })
+
+  // 2. Update Redis so the game doesn't roll back to the old state on the next click!
+  const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+  const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+  if (redisUrl && redisToken) {
+    const { Redis } = await import('@upstash/redis')
+    const redis = new Redis({ url: redisUrl, token: redisToken })
+    await redis.set(`user:${userId}:exp`, newExp)
+    await redis.set(`user:${userId}:level`, newLevel)
+  }
 
   revalidatePath('/', 'layout')
   return {
