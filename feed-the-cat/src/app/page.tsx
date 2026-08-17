@@ -12,6 +12,7 @@ type FoodIcon = {
   x: number
   y: number
   emoji: string
+  isCrit?: boolean
 }
 
 export default function Home() {
@@ -23,6 +24,7 @@ export default function Home() {
   const [foods, setFoods] = useState<FoodIcon[]>([])
   const [showAd, setShowAd] = useState(false)
   const [isMouthOpen, setIsMouthOpen] = useState(false)
+  const [critShake, setCritShake] = useState(false)
   
   const { t, lang, setLang, theme, setTheme } = useAppContext()
 
@@ -151,6 +153,10 @@ export default function Home() {
       setIsMouthOpen(true)
       playPopSound()
 
+      // Calculate Crit
+      const isCrit = Math.random() < 0.1 // 10% chance
+      const earnedExp = isCrit ? 10 : 1
+
       // Add food icon animation
       const foodEmojis = ['🐟', '🍗', '🥩', '🥛', '🍤']
       const newFood: FoodIcon = {
@@ -158,34 +164,37 @@ export default function Home() {
         x: spawnX,
         y: spawnY,
         emoji: foodEmojis[Math.floor(Math.random() * foodEmojis.length)],
+        isCrit
       }
-
       setFoods(prev => [...prev, newFood])
-      
-      // Remove food icon after animation
-      setTimeout(() => {
-        setFoods(prev => prev.filter(f => f.id !== newFood.id))
-      }, 1000)
+
+      if (isCrit) {
+        setCritShake(true)
+        if ((window as any).critTimeout) clearTimeout((window as any).critTimeout)
+        ;(window as any).critTimeout = setTimeout(() => setCritShake(false), 200)
+      }
 
       // Clean up previous timeouts for mouth animation
       if ((window as any).mouthTimeout) {
         clearTimeout((window as any).mouthTimeout)
       }
 
-      setIsMouthOpen(true)
-      playPopSound()
-
       ;(window as any).mouthTimeout = setTimeout(() => {
         setIsMouthOpen(false)
       }, 150)
 
+      // Remove food icon after animation finishes (1 second)
+      setTimeout(() => {
+        setFoods(prev => prev.filter(f => f.id !== newFood.id))
+      }, 1000)
+
       // --- OPTIMISTIC UI UPDATE ---
-      let newExp = exp + 1
+      let newExp = exp + earnedExp
       let newLevel = level
       let currentExpNeeded = expNeeded
       let leveledUpNow = false
 
-      if (newExp >= currentExpNeeded) {
+      while (newExp >= currentExpNeeded) {
         newLevel += 1
         newExp -= currentExpNeeded
         currentExpNeeded = getExpNeededForLevel(newLevel)
@@ -201,7 +210,7 @@ export default function Home() {
       }
 
       // --- BATCH REQUEST TO SERVER ---
-      pendingClicksRef.current += 1
+      pendingClicksRef.current += earnedExp
 
       if (!syncTimeoutRef.current) {
         syncTimeoutRef.current = setTimeout(() => {
@@ -320,7 +329,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="cat-container">
+        <div className={`cat-container ${critShake ? 'crit-shake' : ''}`}>
           <img 
             ref={catRef}
             src={isMouthOpen ? "/popcat_open.png" : "/popcat_closed.png"} 
@@ -343,10 +352,10 @@ export default function Home() {
         {foods.map(food => (
           <div
             key={food.id}
-            className="food-icon"
+            className={`food-icon ${food.isCrit ? 'crit-food' : ''}`}
             style={{ left: food.x - 20, top: food.y - 20, position: 'fixed' }}
           >
-            {food.emoji}
+            {food.isCrit ? <span className="crit-text">+10 CRIT!</span> : food.emoji}
           </div>
         ))}
       </main>
