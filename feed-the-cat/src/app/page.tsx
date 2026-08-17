@@ -52,7 +52,7 @@ export default function Home() {
       }
     }
 
-    fetch('/api/user/me')
+    fetch('/api/user/me', { cache: 'no-store' })
       .then(res => {
         if (res.ok) return res.json()
         throw new Error('Not logged in')

@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 import { encrypt } from '@/lib/auth'
+import { revalidatePath } from 'next/cache'
 
 export async function login(prevState: any, formData: FormData) {
   const username = formData.get('username') as string
@@ -125,6 +126,7 @@ export async function feedCat(userId: string, clicks: number = 1) {
     const currentLevel = result[1]
     const expNeeded = getExpNeededForLevel(currentLevel)
 
+    revalidatePath('/', 'layout')
     return {
       success: true,
       level: currentLevel,
@@ -155,6 +157,7 @@ export async function feedCat(userId: string, clicks: number = 1) {
     data: { exp: newExp, level: newLevel }
   })
 
+  revalidatePath('/', 'layout')
   return {
     success: true,
     level: updatedUser.level,
@@ -192,6 +195,7 @@ export async function claimReward(userId: string) {
     }
   })
 
+  revalidatePath('/', 'layout')
   return {
     success: true,
     level: updatedUser.level,
@@ -222,6 +226,7 @@ export async function updateProfile(userId: string, displayName: string) {
         lastNameChangeAt: new Date()
       }
     })
+    revalidatePath('/', 'layout')
     return { success: true, displayName: updatedUser.displayName, lastNameChangeAt: updatedUser.lastNameChangeAt }
   } catch (error) {
     return { error: 'Failed to update profile' }
@@ -311,6 +316,7 @@ export async function uploadAvatar(userId: string, formData: FormData) {
       data: { avatarUrl: imageUrl }
     })
 
+    revalidatePath('/', 'layout')
     return { success: true, avatarUrl: updatedUser.avatarUrl }
   } catch (error) {
     console.error(error)
@@ -328,6 +334,7 @@ export async function deleteAvatar(userId: string) {
       where: { id: userId },
       data: { avatarUrl: null }
     })
+    revalidatePath('/', 'layout')
     return { success: true }
   } catch (error) {
     console.error(error)
@@ -373,6 +380,7 @@ export async function uploadMeme(userId: string, slotIndex: number, formData: Fo
       create: { userId, slotIndex, imageUrl }
     })
 
+    revalidatePath('/', 'layout')
     return { success: true, meme }
   } catch (error) {
     console.error(error)
@@ -391,6 +399,7 @@ export async function deleteMeme(userId: string, slotIndex: number) {
     await prisma.meme.delete({
       where: { userId_slotIndex: { userId, slotIndex } }
     })
+    revalidatePath('/', 'layout')
     return { success: true }
   } catch (error) {
     console.error(error)
@@ -432,3 +441,4 @@ export async function syncRedisToPostgres() {
 
   return { success: true, message: `Synced ${syncedCount} users`, count: syncedCount }
 }
+
