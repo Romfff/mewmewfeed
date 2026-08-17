@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { feedCat, claimReward } from './actions'
 import { useAppContext } from '@/components/AppProvider'
+import Loading from './loading'
 
 type FoodIcon = {
   id: number
@@ -247,7 +248,7 @@ export default function Home() {
     }
   }, [user])
 
-  if (!user) return <div className="container" style={{ textAlign: 'center', marginTop: '2rem' }}>{t('loading')}</div>
+  if (!user) return <Loading />
 
   const progressPercentage = Math.min((exp / expNeeded) * 100, 100)
 
