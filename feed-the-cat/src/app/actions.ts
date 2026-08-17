@@ -75,8 +75,8 @@ export async function logout() {
 
 // Game Actions
 export async function feedCat(userId: string, clicks: number = 1) {
-  // Anti-Cheat: Max 30 clicks per batch (1 second). This limits server-side bypasses.
-  const validClicks = Math.min(Math.max(1, clicks), 30)
+  // Anti-Cheat: Max 100 clicks per batch (1 second throttle). This limits server-side bypasses but accommodates lag spikes.
+  const validClicks = Math.min(Math.max(1, clicks), 100)
   const expToNextLevelBase = 100
   const getExpNeededForLevel = (lvl: number) => expToNextLevelBase + (lvl - 1) * 50
 

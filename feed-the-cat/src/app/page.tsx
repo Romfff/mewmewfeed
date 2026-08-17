@@ -203,37 +203,37 @@ export default function Home() {
       // --- BATCH REQUEST TO SERVER ---
       pendingClicksRef.current += 1
 
-      if (syncTimeoutRef.current) {
-        clearTimeout(syncTimeoutRef.current)
-      }
-
-      syncTimeoutRef.current = setTimeout(() => {
-        const clicksToSync = pendingClicksRef.current
-        if (clicksToSync > 0) {
-          pendingClicksRef.current = 0 // Reset immediately to capture new clicks
+      if (!syncTimeoutRef.current) {
+        syncTimeoutRef.current = setTimeout(() => {
+          syncTimeoutRef.current = null
           
-          feedCat(user.id, clicksToSync).then(res => {
-            if (res && res.success) {
-              // Only sync if server is strictly AHEAD of our local optimistic state
-              // This prevents older requests that resolve late from dragging the level down
-              setLevel(prevLevel => {
-                setExp(prevExp => {
-                  if (res.level > prevLevel || (res.level === prevLevel && res.exp > prevExp)) {
-                    setExpNeeded(res.expNeeded)
-                    return res.exp
-                  }
-                  return prevExp
+          const clicksToSync = pendingClicksRef.current
+          if (clicksToSync > 0) {
+            pendingClicksRef.current = 0 // Reset immediately to capture new clicks
+            
+            feedCat(user.id, clicksToSync).then(res => {
+              if (res && res.success) {
+                // Only sync if server is strictly AHEAD of our local optimistic state
+                // This prevents older requests that resolve late from dragging the level down
+                setLevel(prevLevel => {
+                  setExp(prevExp => {
+                    if (res.level > prevLevel || (res.level === prevLevel && res.exp > prevExp)) {
+                      setExpNeeded(res.expNeeded)
+                      return res.exp
+                    }
+                    return prevExp
+                  })
+                  if (res.level > prevLevel) return res.level
+                  return prevLevel
                 })
-                if (res.level > prevLevel) return res.level
-                return prevLevel
-              })
-            }
-          }).catch(() => {
-            // If request fails, add the clicks back to the queue
-            pendingClicksRef.current += clicksToSync
-          })
-        }
-      }, 1000)
+              }
+            }).catch(() => {
+              // If request fails, add the clicks back to the queue
+              pendingClicksRef.current += clicksToSync
+            })
+          }
+        }, 1000)
+      }
     },
     [user, exp, level, expNeeded]
   )
