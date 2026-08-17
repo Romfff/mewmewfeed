@@ -24,7 +24,11 @@ export default function Register() {
         </button>
       </div>
       <div className="card">
-        <h1 style={{ marginBottom: '2rem', color: 'var(--primary-hover)' }}>{t('registerTitle')}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', justifyContent: 'center' }}>
+          <img src="/logo.jpg" alt="MewMewFeed Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+          <h1 style={{ margin: 0, color: '#d84366' }}>MewMewFeed</h1>
+        </div>
+        <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>{t('registerTitle')}</h2>
         
         {state?.error && <div className="error">{state.error}</div>}
         

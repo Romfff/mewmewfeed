@@ -38,11 +38,10 @@ export default function Home() {
   useEffect(() => {
     // Pre-create some audio instances for rapid clicking (like Howler)
     if (typeof window !== 'undefined' && audioRefs.current.length === 0) {
-      for (let i = 0; i < 5; i++) {
-        const audio = new Audio('/pop.mp3')
-        audio.volume = 0.2 // Lower volume to make it softer
-        audioRefs.current.push(audio)
-      }
+      // Use a single audio instance for better mobile compatibility
+      const audio = new Audio('/pop.mp3')
+      audio.volume = 0.2
+      audioRefs.current.push(audio)
     }
 
     fetch('/api/user/me')
@@ -64,7 +63,7 @@ export default function Home() {
   const playPopSound = () => {
     const audios = audioRefs.current
     if (audios.length > 0) {
-      const audio = audios.find(a => a.paused || a.ended) || audios[0]
+      const audio = audios[0]
       audio.currentTime = 0
       // Ensure volume is always soft
       audio.volume = 0.2
@@ -231,7 +230,10 @@ export default function Home() {
   return (
     <div className="container" style={{ padding: 0 }}>
       <nav className="nav">
-        <h1>MewMewFeed</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <img src="/logo.jpg" alt="MewMewFeed Logo" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover' }} />
+          <h1>MewMewFeed</h1>
+        </div>
         <div className="nav-links">
           <button 
             className="btn btn-secondary" 
