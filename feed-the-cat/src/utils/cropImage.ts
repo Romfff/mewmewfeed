@@ -39,9 +39,22 @@ export async function getCroppedImg(
     return null
   }
 
-  // Set the size of the cropped canvas
-  croppedCanvas.width = pixelCrop.width
-  croppedCanvas.height = pixelCrop.height
+  // Set the size of the cropped canvas, max 400x400
+  const maxSize = 400
+  let outputWidth = pixelCrop.width
+  let outputHeight = pixelCrop.height
+  if (outputWidth > maxSize || outputHeight > maxSize) {
+    if (outputWidth > outputHeight) {
+      outputHeight = Math.round((outputHeight * maxSize) / outputWidth)
+      outputWidth = maxSize
+    } else {
+      outputWidth = Math.round((outputWidth * maxSize) / outputHeight)
+      outputHeight = maxSize
+    }
+  }
+
+  croppedCanvas.width = outputWidth
+  croppedCanvas.height = outputHeight
 
   // Draw the cropped image onto the new canvas
   croppedCtx.drawImage(
@@ -52,8 +65,8 @@ export async function getCroppedImg(
     pixelCrop.height,
     0,
     0,
-    pixelCrop.width,
-    pixelCrop.height
+    outputWidth,
+    outputHeight
   )
 
   return new Promise((resolve) => {
@@ -63,6 +76,6 @@ export async function getCroppedImg(
       } else {
         resolve(null)
       }
-    }, 'image/jpeg')
+    }, 'image/jpeg', 0.8)
   })
 }

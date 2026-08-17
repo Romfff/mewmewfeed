@@ -96,28 +96,34 @@ export default function ProfileClient({ user }: { user: any }) {
     formData.append('file', croppedFile)
 
     setIsProcessing(true)
-    if (target === 'avatar') {
-      const res = await uploadAvatar(user.id, formData)
-      if (res.success) {
-        setAvatarUrl(res.avatarUrl)
-        showToast('Avatar updated!')
-      } else {
-        showToast('Failed to upload avatar.', 'error')
+    try {
+      if (target === 'avatar') {
+        const res = await uploadAvatar(user.id, formData)
+        if (res.success) {
+          setAvatarUrl(res.avatarUrl)
+          showToast('Avatar updated!')
+        } else {
+          showToast('Failed to upload avatar.', 'error')
+        }
+      } else if (typeof target === 'number') {
+        const res = await uploadMeme(user.id, target, formData)
+        if (res.success && res.meme) {
+          setMemes(prev => {
+            const next = prev.filter(m => m.slotIndex !== target)
+            next.push(res.meme)
+            return next
+          })
+          showToast('Meme uploaded!')
+        } else {
+          showToast('Failed to upload meme.', 'error')
+        }
       }
-    } else if (typeof target === 'number') {
-      const res = await uploadMeme(user.id, target, formData)
-      if (res.success && res.meme) {
-        setMemes(prev => {
-          const next = prev.filter(m => m.slotIndex !== target)
-          next.push(res.meme)
-          return next
-        })
-        showToast('Meme uploaded!')
-      } else {
-        showToast('Failed to upload meme.', 'error')
-      }
+    } catch (err) {
+      console.error(err)
+      showToast('An error occurred during upload. Please try a smaller image.', 'error')
+    } finally {
+      setIsProcessing(false)
     }
-    setIsProcessing(false)
   }
 
   const handleDeleteAvatar = () => {
