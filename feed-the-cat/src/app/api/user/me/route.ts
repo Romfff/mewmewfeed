@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getSession } from '@/lib/auth'
 import prisma from '@/lib/prisma'
+import { syncRedisToPostgres } from '@/app/actions'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -12,6 +13,9 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ error: 'Not logged in' }, { status: 401 })
   }
+
+  // Force sync from Redis to Postgres before returning user data
+  await syncRedisToPostgres().catch(console.error)
 
   const user = await prisma.user.findUnique({
     where: { id: session.id },

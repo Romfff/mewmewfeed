@@ -1,11 +1,15 @@
 import prisma from '@/lib/prisma'
 import Link from 'next/link'
+import { syncRedisToPostgres } from '@/app/actions'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 export const fetchCache = 'force-no-store'
 
 export default async function Leaderboard() {
+  // Force sync from Redis to Postgres before reading the leaderboard
+  await syncRedisToPostgres().catch(console.error)
+
   const topUsers = await prisma.user.findMany({
     orderBy: [
       { level: 'desc' },
