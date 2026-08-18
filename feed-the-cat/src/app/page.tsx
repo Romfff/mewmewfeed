@@ -30,6 +30,7 @@ export default function Home() {
   // Web Audio API for zero-latency, high quality overlapping sound
   const audioCtxRef = useRef<AudioContext | null>(null)
   const audioBufferRef = useRef<AudioBuffer | null>(null)
+  const bgmRef = useRef<HTMLAudioElement>(null)
   const catRef = useRef<HTMLImageElement>(null)
   
   // Batching mechanism
@@ -130,6 +131,12 @@ export default function Home() {
       if (e.target instanceof HTMLElement && e.target.closest('.modal')) return
 
       if (!user) return
+
+      // Start BGM on first interaction
+      if (bgmRef.current && bgmRef.current.paused) {
+        bgmRef.current.volume = 0.2
+        bgmRef.current.play().catch(console.error)
+      }
 
       // 2. Anti-Cheat: Max Clicks Per Second (CPS) limit
       const now = Date.now()
@@ -291,6 +298,10 @@ export default function Home() {
 
       // 2. Now it's safe to claim reward because server state is synced
       const res = await claimReward(user.id)
+      if (res.error) {
+        alert(res.error)
+        return
+      }
       if (res.success && res.level !== undefined && res.exp !== undefined && res.expNeeded !== undefined) {
         setLevel(res.level)
         setExp(res.exp)
@@ -340,6 +351,7 @@ export default function Home() {
         </div>
       </nav>
 
+      <audio ref={bgmRef} src="/bgm.mp3" loop preload="auto" />
       <main className="game-area" onPointerDown={handleFeed}>
         <div className="level-info" onPointerDown={(e) => e.stopPropagation()}>
           <h2>{t('level')} {level}</h2>
@@ -378,26 +390,32 @@ export default function Home() {
             {food.isCrit ? <span className="crit-text">+10 CRIT!</span> : food.emoji}
           </div>
         ))}
+        {/* Bottom Reward Button */}
+        <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, textAlign: 'center', width: '100%' }}>
+          <a 
+            href="https://omg10.com/4/11584778" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="ad-link"
+            onClick={handleClaimReward}
+            style={{ padding: '0.6rem 1.2rem', fontSize: '1rem', margin: 0, display: 'inline-block' }}
+          >
+            🎁 Nhận +50% Điểm
+          </a>
+          <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8, color: 'var(--text-color)', fontWeight: 'bold' }}>
+            (+50% điểm nhưng phải chuyển qua trang quảng cáo, hồi chiêu 5 phút)
+          </p>
+        </div>
       </main>
 
       {showAd && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>{t('levelUp')}</h2>
-            <p style={{ marginBottom: '1rem' }}>{t('reachedLevel')} {level}!</p>
-            <p>{t('claimRewardText')}</p>
-            <a 
-              href="https://omg10.com/4/11584778" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="ad-link"
-              onClick={handleClaimReward}
-            >
-              {t('claimRewardBtn')}
-            </a>
-            <div style={{ marginTop: '1rem' }}>
-              <button className="btn btn-secondary" onClick={() => setShowAd(false)}>
-                {t('close')}
+            <p style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>{t('reachedLevel')} <strong>{level}</strong>!</p>
+            <div>
+              <button className="btn" onClick={() => setShowAd(false)}>
+                Tiếp tục chơi
               </button>
             </div>
           </div>

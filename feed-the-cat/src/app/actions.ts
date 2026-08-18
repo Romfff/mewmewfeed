@@ -175,11 +175,26 @@ export async function claimReward(userId: string) {
   const user = await prisma.user.findUnique({ where: { id: userId } })
   if (!user) return { error: 'User not found' }
 
+  const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
+  const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
+  
+  let redis: any = null
+  if (redisUrl && redisToken) {
+    const { Redis } = await import('@upstash/redis')
+    redis = new Redis({ url: redisUrl, token: redisToken })
+    
+    // Check cooldown (5 minutes)
+    const cooldown = await redis.get(`user:${userId}:reward_cooldown`)
+    if (cooldown) {
+      return { error: 'Vui lòng đợi 5 phút để nhận lại phần thưởng!' }
+    }
+  }
+
   const expToNextLevelBase = 100
   const getExpNeededForLevel = (lvl: number) => expToNextLevelBase + (lvl - 1) * 50
 
   const expNeeded = getExpNeededForLevel(user.level)
-  const rewardExp = Math.floor(expNeeded * 0.1) // 10% exp bonus
+  const rewardExp = Math.floor(expNeeded * 0.5) // 50% exp bonus
 
   let newExp = user.exp + rewardExp
   let newLevel = user.level
@@ -200,13 +215,10 @@ export async function claimReward(userId: string) {
   })
 
   // 2. Update Redis so the game doesn't roll back to the old state on the next click!
-  const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL
-  const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN
-  if (redisUrl && redisToken) {
-    const { Redis } = await import('@upstash/redis')
-    const redis = new Redis({ url: redisUrl, token: redisToken })
+  if (redis) {
     await redis.set(`user:${userId}:exp`, newExp)
     await redis.set(`user:${userId}:level`, newLevel)
+    await redis.set(`user:${userId}:reward_cooldown`, '1', { ex: 300 }) // 5 minutes cooldown
   }
 
   revalidatePath('/', 'layout')

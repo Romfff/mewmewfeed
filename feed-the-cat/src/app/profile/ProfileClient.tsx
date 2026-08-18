@@ -162,7 +162,8 @@ export default function ProfileClient({ user }: { user: any }) {
     })
   }
 
-  const numSlots = Math.floor(user.level / 2)
+  // Limit to 1 slot per 5 levels
+  const numSlots = Math.floor(user.level / 5)
   const slots = Array.from({ length: numSlots }).map((_, i) => i)
 
   return (
