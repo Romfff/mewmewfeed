@@ -299,7 +299,7 @@ export default function Home() {
       // 2. Now it's safe to claim reward because server state is synced
       const res = await claimReward(user.id)
       if (res.error) {
-        alert(res.error)
+        alert(t(res.error) || res.error)
         return
       }
       if (res.success && res.level !== undefined && res.exp !== undefined && res.expNeeded !== undefined) {
@@ -396,26 +396,29 @@ export default function Home() {
             href="https://omg10.com/4/11584778" 
             target="_blank" 
             rel="noopener noreferrer" 
-            className="ad-link"
+            className="pulse-button"
             onClick={handleClaimReward}
-            style={{ padding: '0.6rem 1.2rem', fontSize: '1rem', margin: 0, display: 'inline-block' }}
           >
-            🎁 Nhận +50% Điểm
+            {t('claimBonusBtn')}
           </a>
-          <p style={{ fontSize: '0.8rem', marginTop: '8px', opacity: 0.8, color: 'var(--text-color)', fontWeight: 'bold' }}>
-            (+50% điểm nhưng phải chuyển qua trang quảng cáo, hồi chiêu 5 phút)
+          <p style={{ fontSize: '0.8rem', marginTop: '12px', opacity: 0.6, color: 'var(--text-color)', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+            {t('claimBonusDesc')}
           </p>
         </div>
       </main>
 
       {showAd && (
         <div className="modal-overlay">
-          <div className="modal">
-            <h2>{t('levelUp')}</h2>
-            <p style={{ marginBottom: '1.5rem', fontSize: '1.2rem' }}>{t('reachedLevel')} <strong>{level}</strong>!</p>
+          <div className="modal" style={{ animation: 'pulse-image 2s infinite ease-in-out', border: '2px solid var(--primary-color)', background: 'var(--bg-color)', boxShadow: '0 0 30px rgba(255, 182, 193, 0.5)' }}>
+            <h2 style={{ letterSpacing: '2px', color: 'var(--primary-hover)', fontSize: '1.8rem', marginBottom: '1rem' }}>{t('levelUp')}</h2>
+            <p style={{ marginBottom: '2rem', fontSize: '1.2rem', color: 'var(--text-color)' }}>{t('reachedLevel')} <strong>{level}</strong></p>
             <div>
-              <button className="btn" onClick={() => setShowAd(false)}>
-                Tiếp tục chơi
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowAd(false)}
+                style={{ borderRadius: '30px', padding: '0.8rem 2rem', fontWeight: 'bold', letterSpacing: '1px' }}
+              >
+                {t('continuePlaying')}
               </button>
             </div>
           </div>

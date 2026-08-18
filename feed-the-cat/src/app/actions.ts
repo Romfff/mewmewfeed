@@ -186,7 +186,7 @@ export async function claimReward(userId: string) {
     // Check cooldown (5 minutes)
     const cooldown = await redis.get(`user:${userId}:reward_cooldown`)
     if (cooldown) {
-      return { error: 'Vui lòng đợi 5 phút để nhận lại phần thưởng!' }
+      return { error: 'cooldownError' }
     }
   }
 
