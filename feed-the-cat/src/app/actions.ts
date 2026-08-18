@@ -194,7 +194,7 @@ export async function claimReward(userId: string) {
   const getExpNeededForLevel = (lvl: number) => expToNextLevelBase + (lvl - 1) * 50
 
   const expNeeded = getExpNeededForLevel(user.level)
-  const rewardExp = Math.floor(expNeeded * 0.5) // 50% exp bonus
+  const rewardExp = Math.floor(expNeeded * 0.3) // 30% exp bonus
 
   let newExp = user.exp + rewardExp
   let newLevel = user.level
