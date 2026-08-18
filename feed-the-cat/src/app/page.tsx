@@ -24,6 +24,8 @@ export default function Home() {
   const [foods, setFoods] = useState<FoodIcon[]>([])
   const [showAd, setShowAd] = useState(false)
   const [isMouthOpen, setIsMouthOpen] = useState(false)
+  const [cooldownEnd, setCooldownEnd] = useState<number | null>(null)
+  const [remainingTime, setRemainingTime] = useState<string>('')
   
   const { t, lang, setLang, theme, setTheme } = useAppContext()
 
@@ -47,6 +49,44 @@ export default function Home() {
     }, 15000)
     return () => clearInterval(interval)
   }, [])
+
+  useEffect(() => {
+    // Check initial cooldown from localStorage
+    const storedCooldown = localStorage.getItem('rewardCooldownEnd')
+    if (storedCooldown) {
+      const endTime = parseInt(storedCooldown, 10)
+      if (endTime > Date.now()) {
+        setCooldownEnd(endTime)
+      } else {
+        localStorage.removeItem('rewardCooldownEnd')
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!cooldownEnd) {
+      setRemainingTime('')
+      return
+    }
+
+    const updateTimer = () => {
+      const now = Date.now()
+      if (now >= cooldownEnd) {
+        setCooldownEnd(null)
+        setRemainingTime('')
+        localStorage.removeItem('rewardCooldownEnd')
+      } else {
+        const diff = cooldownEnd - now
+        const minutes = Math.floor(diff / 60000)
+        const seconds = Math.floor((diff % 60000) / 1000)
+        setRemainingTime(`${minutes}:${seconds.toString().padStart(2, '0')}`)
+      }
+    }
+
+    updateTimer()
+    const timer = setInterval(updateTimer, 1000)
+    return () => clearInterval(timer)
+  }, [cooldownEnd])
 
   useEffect(() => {
     // Initialize Web Audio API for pristine pop sound
@@ -276,7 +316,7 @@ export default function Home() {
 
   const handleClaimReward = useCallback(async (e: React.MouseEvent) => {
     e.preventDefault()
-    if (!user) return
+    if (!user || cooldownEnd) return
 
     // Mở tab quảng cáo
     window.open("https://omg10.com/4/11584778", "_blank", "noopener,noreferrer")
@@ -298,10 +338,18 @@ export default function Home() {
 
       // 2. Now it's safe to claim reward because server state is synced
       const res = await claimReward(user.id)
+      
+      if (res.error === 'cooldownError' || res.success) {
+        // Lock button for 5 minutes
+        const endTime = Date.now() + 5 * 60 * 1000
+        setCooldownEnd(endTime)
+        localStorage.setItem('rewardCooldownEnd', endTime.toString())
+      }
+
       if (res.error) {
-        alert(t(res.error) || res.error)
         return
       }
+      
       if (res.success && res.level !== undefined && res.exp !== undefined && res.expNeeded !== undefined) {
         setLevel(res.level)
         setExp(res.exp)
@@ -313,7 +361,7 @@ export default function Home() {
     } catch (error) {
       console.error('Failed to claim reward', error)
     }
-  }, [user])
+  }, [user, cooldownEnd, t])
 
   if (!user) return <Loading />
 
@@ -393,13 +441,18 @@ export default function Home() {
         {/* Bottom Reward Button */}
         <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 50, textAlign: 'center', width: '100%' }}>
           <a 
-            href="https://omg10.com/4/11584778" 
-            target="_blank" 
+            href={cooldownEnd ? "#" : "https://omg10.com/4/11584778"}
+            target={cooldownEnd ? "_self" : "_blank"}
             rel="noopener noreferrer" 
-            className="pulse-button"
+            className={`pulse-button ${cooldownEnd ? 'disabled' : ''}`}
             onClick={handleClaimReward}
+            style={{ 
+              opacity: cooldownEnd ? 0.5 : 1, 
+              pointerEvents: cooldownEnd ? 'none' : 'auto',
+              cursor: cooldownEnd ? 'not-allowed' : 'pointer'
+            }}
           >
-            {t('claimBonusBtn')}
+            {cooldownEnd ? `${remainingTime}` : t('claimBonusBtn')}
           </a>
           <p style={{ fontSize: '0.8rem', marginTop: '12px', opacity: 0.6, color: 'var(--text-color)', fontWeight: 'bold', letterSpacing: '0.5px' }}>
             {t('claimBonusDesc')}
